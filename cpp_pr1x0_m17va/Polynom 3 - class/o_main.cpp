@@ -31,5 +31,5 @@ int main()
                  "x^3 egyutthatoja P_2-ben: " << P_2[3] << 
                  std::endl;
 
-    return int(0);
+    return 0;
 }

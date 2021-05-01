@@ -40,16 +40,15 @@ class Polynom
 {
 public:
     Polynom(const std::vector<int>& v = {0});
-    //Polynom(std::vector<int>&& v = {0});
     Polynom(int c);
     Polynom(const char * line); 
 
     int coeff(uint n) const;
     int deg() const;
 
-    int eval(int x) const;
+    int eval_old(int x) const;
+    int eval(int x) const; 
     std::string to_string() const;
-    std::string to_string_2() const;
 
     int operator()(int x) const;
     int operator[](uint n) const;

@@ -76,7 +76,7 @@ int Polynom::deg() const
     return _degree;
 }
 
-int Polynom::eval(int x) const
+int Polynom::eval_old(int x) const
 {
     int p_val = 0;
     for ( uint i = 0; i < _coeffVector.size(); ++i )
@@ -87,59 +87,33 @@ int Polynom::eval(int x) const
     return p_val;
 }
 
-std::string Polynom::to_string() const
+int Polynom::eval(int x) const
 {
-    std::string result;
-    uint skipped = 0;
-    uint coeff;
-    std::string sign;
-    bool first = true;
-
-    for ( int i = _degree; i >= 0 ; --i )
-    {   
-        if ( _coeffVector[i] != 0 )
-        {
-            if ( _coeffVector[i] < 0 )
-            {
-                if ( first )
-                {
-                    sign = "-";
-                    first = false;
-                }
-                else 
-                    sign = " - ";
-                
-                coeff = -_coeffVector[i];
-            }
-            else
-            {
-                if ( first )
-                {
-                    sign = "";
-                    first = false;
-                }
-                else 
-                    sign = " + ";
-                
-                coeff = _coeffVector[i];
-            }
-
-            result += sign + format_coeff(coeff, i)  + format_power(i);
-        }
-        else
-        {
-            ++skipped;
-        }
-    }
-
-    if ( (_degree + 1)  == skipped )
+    int p_val = 0;
+    if (0 == _coeffVector.size())
+        return p_val;
+    if (1 == _coeffVector.size())
     {
-        result += '0';
+        const Term& current_term = _coeffVector[0];
+        p_val = current_term.coeff * pow(x,current_term.deg);
+        return p_val;
+    } 
+
+    for (uint i = _coeffVector.size()-1; i >= 1; --i)
+    {
+        const Term& current_term = _coeffVector[i];
+        const Term& prev_term = _coeffVector[i-1];
+
+        p_val += current_term.coeff;
+        p_val *= pow(x, current_term.deg-prev_term.deg);
     }
-    return result;
+    const Term& current_term = _coeffVector[0];
+    p_val += current_term.coeff;
+    p_val *= pow(x, current_term.deg);
+    return p_val;
 }
 
-std::string Polynom::to_string_2() const
+std::string Polynom::to_string() const
 {
     std::string result;
     Term current_term;
@@ -232,7 +206,7 @@ void Polynom::_assign_new_from_string(const std::string& line)
 
 std::ostream& operator<<(std::ostream& out, const Polynom P)
 {
-    out << P.to_string_2();
+    out << P.to_string();
     return out;
 }
 
@@ -291,7 +265,6 @@ Polynom operator+(const Polynom& P1, const Polynom& P2)
         P_res._coeffVector.push_back(current_term);
         ++i2;
     } 
-    
 
     return P_res;
 }
