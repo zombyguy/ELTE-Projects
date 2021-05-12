@@ -96,7 +96,6 @@ public:
     uint deg() const;
 
     T eval(T x) const;
-    T eval_horner(T x);
     std::string to_string() const;
 
     T operator()(T x) const;
@@ -163,18 +162,6 @@ uint Polynom<T>::deg() const
 
 template <typename T>
 T Polynom<T>::eval(T x) const
-{
-    T p_val = 0;
-    for ( uint i = 0; i < _coeffVector.size(); ++i )
-    {
-        const Term<T>& current_term = _coeffVector[i];
-        p_val += current_term.coeff * pow(x, current_term.deg);
-    }
-    return p_val;
-}
-
-template <typename T>
-T Polynom<T>::eval_horner(T x)
 {
     T p_val = 0;
     if (0 == _coeffVector.size())
@@ -250,7 +237,7 @@ std::string Polynom<T>::to_string() const
 template <typename T>
 T Polynom<T>::operator()(T x) const
 {
-    return eval_horner(x);
+    return eval(x);
 }
 
 template <typename T>
@@ -269,18 +256,20 @@ Polynom<T>& Polynom<T>::operator=(const std::string& line)
 template <typename T>
 Polynom<T> Polynom<T>::operator-() const
 {
-    std::vector<T> out = {};
+    Polynom<T> result;
     for ( uint i = 0; i < _coeffVector.size(); ++i)
     {
         const Term<T>& coeff = _coeffVector[i];
-        out.push_back(-coeff);
+        result._coeffVector.push_back(-coeff);
     }
-    return Polynom{out};
+    result._degree = _degree;
+    return result;
 }
 
 template <typename T>
 void Polynom<T>::_assign_new_from_vector(const std::vector<T>& v)
 {
+    _degree = 0;
     for (uint i = 0; i < v.size(); ++i )
     {
         if ( v[i] != 0 )
@@ -294,12 +283,14 @@ void Polynom<T>::_assign_new_from_vector(const std::vector<T>& v)
 template <typename T>
 void Polynom<T>::_assign_new_from_map(const std::map<uint, T>& m)
 {
+    _degree = 0;
     auto it = m.cbegin();
     while ( it != m.cend() )
     {
         if (it->second != 0)
         {
             _coeffVector.push_back( Term<T>( it->second, it->first ) );
+            _degree = it->first;
         }
         ++it;
     }
@@ -331,14 +322,14 @@ std::ostream& operator<<(std::ostream& out, const Polynom<T>& P)
     return out;
 }
 
-template <typename T>
+/*template <typename T>
 void operator>>(std::istream& is, Polynom<T>& P)
 {
     std::string line;
     std::getline(is, line);
     P = line;
     //talán lesz majd return is
-}
+}*/
 
 template <typename T>
 Polynom<T> operator+(const Polynom<T>& P1, const Polynom<T>& P2)
@@ -355,6 +346,7 @@ Polynom<T> operator+(const Polynom<T>& P1, const Polynom<T>& P2)
         if (term_P1.deg < term_P2.deg)
         {
             P_res._coeffVector.push_back(term_P1);
+            P_res._degree = term_P1.deg;
             ++i1;
         }
         else if (term_P1.deg == term_P2.deg)
@@ -363,6 +355,7 @@ Polynom<T> operator+(const Polynom<T>& P1, const Polynom<T>& P2)
             if ( val != 0 )
             {
                 P_res._coeffVector.push_back(Term<T>(val, term_P1.deg));
+                P_res._degree = term_P1.deg;
             }
             ++i1;
             ++i2;
@@ -370,6 +363,7 @@ Polynom<T> operator+(const Polynom<T>& P1, const Polynom<T>& P2)
         else // term_P2.deg < term_P1.deg
         {
             P_res._coeffVector.push_back(term_P2);
+            P_res._degree = term_P2.deg;
             ++i2;
         }
     
@@ -380,12 +374,14 @@ Polynom<T> operator+(const Polynom<T>& P1, const Polynom<T>& P2)
     {
         const Term<T>& current_term = P1._coeffVector[i1];
         P_res._coeffVector.push_back(current_term);
+        P_res._degree = current_term.deg;
         ++i1;
     }
     while (P2._coeffVector.size() > i2)
     {
         const Term<T>& current_term = P1._coeffVector[i2];
         P_res._coeffVector.push_back(current_term);
+        P_res._degree = current_term.deg;
         ++i2;
     } 
     
